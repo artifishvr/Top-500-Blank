@@ -1,5 +1,3 @@
-import GoogleImages from "googleimg";
-import dotenv from "dotenv";
 import fs from "fs";
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -11,9 +9,6 @@ import exec from "await-exec"
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-dotenv.config();
-
-const giclient = new GoogleImages('230ee02d3fb284efd', process.env.IMG_TOKEN);
 
 function formatNumber(num) {
     // Convert the number to a string
@@ -49,7 +44,6 @@ async function makeTrans(frames) {
 }
 
 const frameDirectory = path.join(__dirname, 'out/frames');
-const downloadDirectory = path.join(__dirname, 'out/images');
 
 async function downloadImage(url, index) {
     try {
@@ -78,6 +72,28 @@ async function downloadImage(url, index) {
     }
 }
 
+async function moveImage(filePath, index) {
+    try {
+        if (!fs.existsSync(frameDirectory)) {
+            fs.mkdirSync(frameDirectory);
+        }
+
+        let image = fs.readFileSync(filePath);
+
+        const filename = `${formatNumber(index)}.jpeg`;
+        const imagePath = path.join(frameDirectory, filename);
+
+        
+
+        fs.writeFileSync(imagePath, image);
+
+        return imagePath;
+    } catch (error) {
+        console.error(`Error lol good luck` + error);
+        return null;
+    }
+}
+
 async function makeVideo() {
     await exec(`ffmpeg -framerate 1 -start_number 1 -i %3d.jpeg -c:v libx264 -r 1 -y ../output.mp4`, { cwd: frameDirectory })
     console.log("Video created at /out/output.mp4!");
@@ -91,27 +107,29 @@ async function makeVideo() {
 }
 
 
-let query = "meow";
-(async () => {    
-    await giclient.search(query)
-        .then(async images => {
-            if (!images) {
-                return console.log("no results");
-            }
-            let frames = images.length * 2;
-            while (frames > 0) {
-                frames--;
-                await makeTrans(frames);
-                frames--;
-                const imageUrl = images[frames / 2].link;
-                const imagePath = await downloadImage(imageUrl, frames);
-                if (imagePath) {
-                    console.log(`Downloaded image ${imageUrl}`);
-                } else {
-                    console.log(`Failed to download ${imageUrl}`);
-                }
-            }
-        });
+const downloadDirectory = path.join(__dirname, 'out/images');
+
+(async () => {
+
+    const images = fs.readdirSync(downloadDirectory);
+
+    if (!images) {
+        return console.log("no images downloaded");
+    }
+    console.log(images);
+    let frames = images.length * 2;
+    while (frames > 0) {
+        frames--;
+        await makeTrans(frames);
+        frames--;
+        const imageUrl = images[frames / 2];
+        const imagePath = await moveImage(path.join(downloadDirectory, imageUrl), frames);
+        if (imagePath) {
+            console.log(`yep we got a ${imageUrl} - ${imagePath}`);
+        } else {
+            console.log(`Failed to download ${imageUrl} - ${imagePath}`);
+        }
+    }
     makeVideo();
 
 })();
