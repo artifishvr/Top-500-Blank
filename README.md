@@ -1,3 +1,6 @@
+# Archived! This project is currently outside of my skillset (lmao) so i'll be archiving this and will return at a later date 🫡
+
+<br><br>
 # Top 500 _________
 
 ## The Goal
