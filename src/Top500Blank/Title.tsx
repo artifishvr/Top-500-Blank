@@ -5,10 +5,12 @@ import { FONT_FAMILY } from "./constants";
 const title: React.CSSProperties = {
   fontFamily: FONT_FAMILY,
   fontWeight: "bold",
-  fontSize: 100,
+  fontSize: 200,
   textAlign: "center",
   position: "absolute",
-  bottom: 160,
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
   width: "100%",
 };
 
@@ -20,8 +22,7 @@ const word: React.CSSProperties = {
 
 export const Title: React.FC<{
   readonly titleText: string;
-  readonly titleColor: string;
-}> = ({ titleText, titleColor }) => {
+}> = ({ titleText }) => {
   const videoConfig = useVideoConfig();
   const frame = useCurrentFrame();
 
@@ -30,23 +31,12 @@ export const Title: React.FC<{
   return (
     <h1 style={title}>
       {words.map((t, i) => {
-        const delay = i * 5;
-
-        const scale = spring({
-          fps: videoConfig.fps,
-          frame: frame - delay,
-          config: {
-            damping: 200,
-          },
-        });
-
         return (
           <span
             key={t}
             style={{
               ...word,
-              color: titleColor,
-              transform: `scale(${scale})`,
+              color: "#ffffff",
             }}
           >
             {t}
