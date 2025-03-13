@@ -1,9 +1,9 @@
 {
   "name": "top-500-blank",
-  "version": "1.0.0",
+  "version": "0.2.0",
   "description": "My Remotion video",
-  "repository": {},
-  "license": "UNLICENSED",
+  "repository": "https://github.com/artifishvr/Top-500-Blank",
+  "license": "MIT",
   "private": true,
   "dependencies": {
     "@remotion/cli": "4.0.273",
