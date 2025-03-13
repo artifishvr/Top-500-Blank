@@ -8,6 +8,8 @@ Automatically create a video for any image search term in the style of [top 5000
 
 - [Bun](https://bun.sh/)
 
+### Setup
+
 1. Clone the repository
 2. Copy `.env.example` to `.env` and fill in the values
 3. Run `bun install` to install dependencies
