@@ -1,13 +1,4 @@
-import {
-  AbsoluteFill,
-  delayRender,
-  Sequence,
-  useVideoConfig,
-  getStaticFiles,
-  Audio,
-  continueRender,
-  cancelRender,
-} from "remotion";
+import { AbsoluteFill, Sequence, useVideoConfig } from "remotion";
 import { Title } from "./Top500Blank/Title";
 import { Image } from "./Top500Blank/Image";
 
@@ -22,32 +13,47 @@ export const CompSchema = z.object({
   count: z.number(),
 });
 
-const fetchItems = async (count: number, query: string, handle: any) => {
+const fetchItems = async (count: number, query: string) => {
   try {
-    const photos = await client.photos.search({ query, per_page: 80 });
-
-    if ("error" in photos) {
-      console.log(photos.error);
-      return [];
-    }
-
     const array: { index: number; src: string }[] = [];
+    let page = 1;
+    const perPage = 80;
 
-    for (const photo of photos.photos) {
-      if (array.length >= count) {
+    while (array.length < count) {
+      const photos = await client.photos.search({
+        query,
+        per_page: perPage,
+        page: page,
+      });
+
+      if ("error" in photos) {
+        console.log(photos.error);
         break;
       }
-      array.push({
-        index: array.length,
-        src: photo.src.large,
-      });
+
+      if (!photos.photos || photos.photos.length === 0) {
+        break;
+      }
+
+      for (const photo of photos.photos) {
+        array.push({
+          index: array.length,
+          src: photo.src.large,
+        });
+
+        if (array.length >= count) {
+          break;
+        }
+      }
+      if (photos.photos.length < perPage) {
+        break;
+      }
+      page++;
     }
 
-    continueRender(handle);
     return array;
   } catch (error) {
     console.error("Error fetching photos:", error);
-    cancelRender(handle);
     return [];
   }
 };
@@ -58,60 +64,13 @@ export const Top500Blank: React.FC<z.infer<typeof CompSchema>> = ({
 }) => {
   const { fps } = useVideoConfig();
   const [items, setItems] = useState<{ index: number; src: string }[]>([]);
-  const [randomizedAudioFiles, setRandomizedAudioFiles] = useState<any[]>([]);
-  const [handle] = useState(() => delayRender());
 
   useEffect(() => {
-    fetchItems(count, query, handle).then(setItems);
+    fetchItems(count, query).then(setItems);
   }, [count, query]);
-
-  useEffect(() => {
-    const files = getStaticFiles()
-      .filter((file) => file.name.includes("audio/"))
-      .map((file) => file.src);
-
-    const audioDurations: { [src: string]: number } = {};
-
-    const durationPromises = files.map((file) => {
-      return new Promise<void>((resolve) => {
-        const audio = document.createElement("audio");
-        audio.src = file;
-        audio.addEventListener("loadedmetadata", () => {
-          audioDurations[file] = Math.ceil(audio.duration * fps);
-          resolve();
-        });
-        audio.addEventListener("error", () => {
-          audioDurations[file] = fps * 6;
-          resolve();
-        });
-      });
-    });
-
-    Promise.all(durationPromises).then(() => {
-      const filesWithDurations = files.map((file) => ({
-        src: file,
-        durationInFrames: audioDurations[file],
-      }));
-
-      setRandomizedAudioFiles(filesWithDurations);
-    });
-  }, [fps]);
 
   return (
     <AbsoluteFill style={{ backgroundColor: "#285FB2" }}>
-      {randomizedAudioFiles.map((audioFile, audioIndex) => {
-        const startFrame = audioIndex * audioFile.durationInFrames;
-        return (
-          <Sequence
-            key={`audio-${audioIndex}`}
-            from={startFrame}
-            durationInFrames={audioFile.durationInFrames}
-          >
-            <Audio src={audioFile.src} />
-          </Sequence>
-        );
-      })}
-
       <Sequence from={0} durationInFrames={fps * 3}>
         <Title titleText={`top ${count} ${query}`} />
       </Sequence>

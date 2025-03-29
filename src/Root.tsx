@@ -10,7 +10,7 @@ export const RemotionRoot: React.FC = () => {
         // npx remotion render src/index.ts <id> out/video.mp4
         id="Top500Blank"
         component={Top500Blank}
-        durationInFrames={4000}
+        durationInFrames={1890}
         fps={30}
         width={1280}
         height={720}
@@ -20,6 +20,13 @@ export const RemotionRoot: React.FC = () => {
         defaultProps={{
           query: "fish",
           count: 10,
+        }}
+        calculateMetadata={async ({ props }) => {
+          const durationInFrames = 120 + props.count * 180;
+
+          return {
+            durationInFrames: durationInFrames,
+          };
         }}
       />
     </>
